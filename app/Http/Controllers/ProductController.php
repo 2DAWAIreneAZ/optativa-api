@@ -5,18 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\Style;
 use App\Models\Valoration;
+use App\Http\Controllers\ProductController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Http;
 
 class ProductController extends Controller
 {
-    public function __construct()
-    {
-        $this->middleware('auth');
-    }
-
-    public function index(Request $request)
-    {
+    public function index(Request $request) {
         $query = Product::with('style', 'valorations');
 
         if ($request->has('search') && $request->search != '') {
@@ -27,21 +23,95 @@ class ProductController extends Controller
             $query->where('id_style', $request->style);
         }
 
-        $products = $query->latest()->paginate(12);
+        $products = $query->latest()->paginate(6);
         $styles = Style::all();
 
-        return view('products.index', compact('products', 'styles'));
+        return view('products.index', ['products' => $products, 'styles' => $styles]);
     }
 
-    public function create()
-    {
+    public function create() {
         $this->authorize('create', Product::class);
         $styles = Style::all();
-        return view('products.create', compact('styles'));
+        return view('products.create', ['styles' => $styles]);
     }
 
-    public function store(Request $request)
+    /**
+     * Obtener productos de la API según la categoría/estilo seleccionado
+     */
+    public function getApiProductsByCategory(Request $request)
     {
+        $this->authorize('create', Product::class);
+        
+        $styleId = $request->input('style_id');
+        
+        if (!$styleId) {
+            return response()->json(['success' => false, 'products' => []]);
+        }
+
+        // Mapeo de estilos a categorías de la API
+        $style = Style::find($styleId);
+        if (!$style) {
+            return response()->json(['success' => false, 'products' => []]);
+        }
+
+        // Mapeo exacto de nombres de estilos a categorías de FakeStore API
+        $categoryMap = [
+            'Electronics' => 'electronics',
+            'Jewelry' => 'jewelery', // Nota: la API lo escribe así (sin 'l')
+            "Men's Clothing" => "men's clothing",
+            "Women's Clothing" => "women's clothing"
+        ];
+
+        $apiCategory = $categoryMap[$style->name] ?? null;
+
+        if (!$apiCategory) {
+            return response()->json([
+                'success' => false, 
+                'message' => 'This style has no API products available',
+                'products' => []
+            ]);
+        }
+
+        try {
+            // Obtener productos de la categoría desde FakeStore API
+            $response = Http::timeout(10)->get("https://fakestoreapi.com/products/category/{$apiCategory}");
+            
+            if ($response->successful()) {
+                $products = $response->json();
+                
+                // Formatear productos para el frontend
+                $formattedProducts = array_map(function($product) {
+                    return [
+                        'id' => $product['id'],
+                        'title' => $product['title'],
+                        'price' => $product['price'],
+                        'description' => $product['description'],
+                        'image' => $product['image']
+                    ];
+                }, $products);
+
+                return response()->json([
+                    'success' => true,
+                    'products' => $formattedProducts
+                ]);
+            }
+            
+            return response()->json([
+                'success' => false, 
+                'message' => 'Error connecting to API',
+                'products' => []
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false, 
+                'error' => $e->getMessage(),
+                'products' => []
+            ]);
+        }
+    }
+
+    public function store(Request $request) {
         $this->authorize('create', Product::class);
 
         $validated = $request->validate([
@@ -50,34 +120,37 @@ class ProductController extends Controller
             'price' => 'required|numeric|min:0',
             'description' => 'required|string',
             'stock' => 'required|integer|min:0',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'api_image_url' => 'nullable|url'
         ]);
 
+        // Prioridad: imagen subida > URL de API
         if ($request->hasFile('image')) {
             $validated['image'] = $request->file('image')->store('products', 'public');
+        } elseif ($request->filled('api_image_url')) {
+            $validated['image'] = $request->input('api_image_url');
         }
+        
+        // Eliminar api_image_url antes de crear el producto
+        unset($validated['api_image_url']);
 
         Product::create($validated);
 
-        return redirect()->route('products.index')
-            ->with('success', 'Product created successfully!');
+        return redirect()->route('products.index')->with('success', 'Product created successfully!');
     }
 
-    public function show(Product $product)
-    {
+    public function show(Product $product) {
         $product->load(['style', 'valorations.user']);
-        return view('products.show', compact('product'));
+        return view('products.show', ['product' => $product]);
     }
 
-    public function edit(Product $product)
-    {
+    public function edit(Product $product) {
         $this->authorize('update', $product);
         $styles = Style::all();
-        return view('products.edit', compact('product', 'styles'));
+        return view('products.edit', ['product' => $product, 'styles' => $styles]);
     }
 
-    public function update(Request $request, Product $product)
-    {
+    public function update(Request $request, Product $product) {
         $this->authorize('update', $product);
 
         $validated = $request->validate([
@@ -90,6 +163,7 @@ class ProductController extends Controller
         ]);
 
         if ($request->hasFile('image')) {
+            // Eliminar imagen anterior solo si es local
             if ($product->image && !str_starts_with($product->image, 'http') && Storage::disk('public')->exists($product->image)) {
                 Storage::disk('public')->delete($product->image);
             }
@@ -98,26 +172,23 @@ class ProductController extends Controller
 
         $product->update($validated);
 
-        return redirect()->route('products.index')
-            ->with('success', 'Product updated successfully!');
+        return redirect()->route('products.index')->with('success', 'Product updated successfully!');
     }
 
-    public function destroy(Product $product)
-    {
+    public function destroy(Product $product) {
         $this->authorize('delete', $product);
 
+        // Eliminar imagen solo si es local
         if ($product->image && !str_starts_with($product->image, 'http') && Storage::disk('public')->exists($product->image)) {
             Storage::disk('public')->delete($product->image);
         }
 
         $product->delete();
 
-        return redirect()->route('products.index')
-            ->with('success', 'Product deleted successfully!');
+        return redirect()->route('products.index')->with('success', 'Product deleted successfully!');
     }
 
-    public function buy(Product $product)
-    {
+    public function buy(Product $product) {
         if (auth()->user()->isAdmin()) {
             return redirect()->back()->with('error', 'Administrators cannot purchase products!');
         }
@@ -129,19 +200,19 @@ class ProductController extends Controller
         // Decrementar el stock
         $product->decrement('stock');
 
-        // Registrar la compra
-        \App\Models\Purchase::create([
-            'user_id' => auth()->id(),
-            'product_id' => $product->id,
-            'price' => $product->price
-        ]);
+        // Registrar la compra (solo si tienes modelo Purchase)
+        if (class_exists(\App\Models\Purchase::class)) {
+            \App\Models\Purchase::create([
+                'user_id' => auth()->id(),
+                'product_id' => $product->id,
+                'price' => $product->price
+            ]);
+        }
 
-        return redirect()->route('products.index')
-            ->with('success', 'Purchase successful! Product: ' . $product->name);
+        return redirect()->route('products.index')->with('success', 'Purchase successful! Product: ' . $product->name);
     }
 
-    public function addValoration(Request $request, Product $product)
-    {
+    public function addValoration(Request $request, Product $product) {
         if (auth()->user()->isAdmin()) {
             return redirect()->back()->with('error', 'Administrators cannot add reviews!');
         }

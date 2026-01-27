@@ -11,7 +11,7 @@ class StyleSeeder extends Seeder
     {
         $styles = [
             ['name' => 'Electronics', 'difficulty' => 'medium'],
-            ['name' => 'Jewelry', 'difficulty' => 'hard'],
+            ['name' => 'Jewelery', 'difficulty' => 'hard'],
             ['name' => 'Men\'s Clothing', 'difficulty' => 'easy'],
             ['name' => 'Women\'s Clothing', 'difficulty' => 'easy'],
             ['name' => 'General', 'difficulty' => 'easy']

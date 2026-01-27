@@ -20,8 +20,8 @@
                         @auth
                             <a href="{{ url('/dashboard') }}" class="text-gray-700 hover:text-gray-900">Dashboard</a>
                         @else
-                            <a href="{{ route('profile.login') }}" class="text-gray-700 hover:text-gray-900">Log in</a>
-                            <a href="{{ route('profile.register') }}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                            <a href="{{ route('login') }}" class="text-gray-700 hover:text-gray-900">Log in</a>
+                            <a href="{{ route('register') }}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                                 Register
                             </a>
                         @endauth
@@ -39,7 +39,7 @@
                         Shop Now
                     </a>
                 @else
-                    <a href="{{ route('profile.register') }}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg text-lg">
+                    <a href="{{ route('register') }}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg text-lg">
                         Get Started
                     </a>
                 @endauth

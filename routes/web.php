@@ -10,6 +10,11 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::middleware('auth')->group(function () {
+    Route::resource('products', ProductController::class);
+});
+
+
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
@@ -25,6 +30,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     
     // Rutas de productos
+    Route::get('/products/api/by-category', [ProductController::class, 'getApiProductsByCategory'])->name('products.getApiProducts');
     Route::resource('products', ProductController::class);
     Route::post('/products/{product}/buy', [ProductController::class, 'buy'])->name('products.buy');
     Route::post('/products/{product}/valoration', [ProductController::class, 'addValoration'])->name('products.valoration');
@@ -48,3 +54,5 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::resource('products', AdminProductController::class);
 });
+
+require __DIR__.'/auth.php';
