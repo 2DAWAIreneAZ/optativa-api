@@ -23,7 +23,7 @@ class ProductController extends Controller
             $query->where('id_style', $request->style);
         }
 
-        $products = $query->latest()->paginate(6);
+        $products = $query->latest()->paginate(8);
         $styles = Style::all();
 
         return view('products.index', ['products' => $products, 'styles' => $styles]);
@@ -35,81 +35,90 @@ class ProductController extends Controller
         return view('products.create', ['styles' => $styles]);
     }
 
-    /**
-     * Obtener productos de la API según la categoría/estilo seleccionado
-     */
-    public function getApiProductsByCategory(Request $request)
-    {
+		public function getApiProductsByCategory(Request $request) {
         $this->authorize('create', Product::class);
         
-        $styleId = $request->input('style_id');
-        
-        if (!$styleId) {
-            return response()->json(['success' => false, 'products' => []]);
-        }
+        $styleId = (int) $request->query('style_id');
 
-        // Mapeo de estilos a categorías de la API
-        $style = Style::find($styleId);
-        if (!$style) {
-            return response()->json(['success' => false, 'products' => []]);
-        }
-
-        // Mapeo exacto de nombres de estilos a categorías de FakeStore API
+        // Mapeo de IDs de estilos a IDs de categorías
         $categoryMap = [
-            'Electronics' => 'electronics',
-            'Jewelry' => 'jewelery', // Nota: la API lo escribe así (sin 'l')
-            "Men's Clothing" => "men's clothing",
-            "Women's Clothing" => "women's clothing"
+            1 => 1,  // Clothes
+            2 => 2,  // Electronics
+            3 => 3,  // Furniture
+            4 => 4,  // Shoes
+            5 => 5,  // Miscellaneous
         ];
 
-        $apiCategory = $categoryMap[$style->name] ?? null;
-
-        if (!$apiCategory) {
+        if (!isset($categoryMap[$styleId])) {
             return response()->json([
-                'success' => false, 
-                'message' => 'This style has no API products available',
+                'success' => false,
+                'message' => 'Invalid category selected',
                 'products' => []
             ]);
         }
 
+        $categoryId = $categoryMap[$styleId];
+
         try {
-            // Obtener productos de la categoría desde FakeStore API
-            $response = Http::timeout(10)->get("https://fakestoreapi.com/products/category/{$apiCategory}");
-            
+            // Obtener productos filtrados por categoría
+            $response = Http::timeout(15)
+                ->get("https://api.escuelajs.co/api/v1/products", [
+                    'categoryId' => $categoryId,
+                    'offset' => 0,
+                    'limit' => 20 // Limitar a 20 productos
+                ]);
+
             if ($response->successful()) {
                 $products = $response->json();
-                
-                // Formatear productos para el frontend
-                $formattedProducts = array_map(function($product) {
-                    return [
-                        'id' => $product['id'],
-                        'title' => $product['title'],
-                        'price' => $product['price'],
-                        'description' => $product['description'],
-                        'image' => $product['image']
-                    ];
-                }, $products);
+
+                // Verificar que sea un array y tenga productos
+                if (is_array($products) && count($products) > 0) {
+                    // Formatear productos para el frontend
+                    $formattedProducts = array_map(function($product) {
+                        return [
+                            'id' => $product['id'] ?? 0,
+                            'title' => $product['title'] ?? 'No title',
+                            'price' => $product['price'] ?? 0,
+                            'description' => $product['description'] ?? 'No description',
+                            // Platzi API usa un array de imágenes, tomamos la primera
+                            'image' => !empty($product['images']) && is_array($product['images']) 
+                                ? $product['images'][0] 
+                                : 'https://placehold.co/400x400',
+                            'category' => $product['category']['name'] ?? 'Unknown'
+                        ];
+                    }, $products);
+
+                    return response()->json([
+                        'success' => true,
+                        'products' => $formattedProducts,
+                        'total' => count($formattedProducts)
+                    ]);
+                }
 
                 return response()->json([
-                    'success' => true,
-                    'products' => $formattedProducts
+                    'success' => false,
+                    'message' => 'No products found for this category',
+                    'products' => []
                 ]);
             }
-            
+
             return response()->json([
-                'success' => false, 
-                'message' => 'Error connecting to API',
+                'success' => false,
+                'message' => 'Error connecting to Platzi API - Status: ' . $response->status(),
                 'products' => []
             ]);
-            
+
         } catch (\Exception $e) {
             return response()->json([
-                'success' => false, 
+                'success' => false,
                 'error' => $e->getMessage(),
                 'products' => []
             ]);
         }
     }
+
+
+
 
     public function store(Request $request) {
         $this->authorize('create', Product::class);

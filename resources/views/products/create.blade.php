@@ -7,21 +7,37 @@
         <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6">
+                    {{-- Mensajes de error o éxito --}}
+                    @if(session('success'))
+                        <div class="mb-4 p-4 bg-green-50 border-l-4 border-green-500 text-green-700">
+                            ✅ {{ session('success') }}
+                        </div>
+                    @endif
+
+                    @if(session('error'))
+                        <div class="mb-4 p-4 bg-red-50 border-l-4 border-red-500 text-red-700">
+                            ❌ {{ session('error') }}
+                        </div>
+                    @endif
+
                     <form action="{{ route('products.store') }}" method="POST" enctype="multipart/form-data" id="productForm">
                         @csrf
 
                         {{-- PASO 1: SELECCIONAR CATEGORÍA --}}
                         <div class="mb-6 p-4 bg-blue-50 border-l-4 border-blue-500">
-                            <p class="font-semibold text-blue-800">📦 Step 1: Select a category to see API products</p>
+                            <p class="font-semibold text-blue-800">📦 Step 1: Select a category</p>
+                            <p class="text-sm text-blue-600 mt-1">Products from Platzi Fake Store API will load automatically</p>
                         </div>
 
+                        <input type="hidden" name="api_image_url" id="apiImageUrl">
+
                         <div class="mb-6">
-                            <label class="block text-gray-700 text-sm font-bold mb-2">Style / Category *</label>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">Category / Style *</label>
                             <select name="id_style" 
                                     id="productStyle"
                                     class="shadow border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('id_style') border-red-500 @enderror" 
                                     required>
-                                <option value="">-- Select a Style --</option>
+                                <option value="">-- Select a Category --</option>
                                 @foreach($styles as $style)
                                     <option value="{{ $style->id }}" {{ old('id_style') == $style->id ? 'selected' : '' }}>
                                         {{ $style->name }} ({{ ucfirst($style->difficulty) }})
@@ -33,38 +49,47 @@
                             @enderror
                         </div>
 
-                        {{-- PASO 2: SELECCIONAR PRODUCTO DE LA API (aparece después de elegir categoría) --}}
+                        {{-- PASO 2: PRODUCTOS DE LA API --}}
                         <div id="apiProductsSection" class="mb-6 hidden">
                             <div class="mb-4 p-4 bg-green-50 border-l-4 border-green-500">
-                                <p class="font-semibold text-green-800">✅ Step 2: Choose a product from API (optional)</p>
-                                <p class="text-sm text-green-700 mt-1">Select a product to auto-fill data, or leave empty to enter manually</p>
+                                <p class="font-semibold text-green-800">✅ Step 2: Choose a product from Platzi API (optional)</p>
+                                <p class="text-sm text-green-700 mt-1">Select to auto-fill, or enter data manually below</p>
                             </div>
 
                             <label class="block text-gray-700 text-sm font-bold mb-2">
-                                Products from API 
+                                Products from Platzi API
                                 <span class="text-xs font-normal text-gray-500">(Optional)</span>
                             </label>
-                            <select id="apiProductSelect" 
-                                    class="shadow border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-                                <option value="">-- Select a product from API or enter manually --</option>
-                            </select>
-                            
-                            <div id="loadingProducts" class="hidden mt-2 text-blue-600 text-sm">
-                                <svg class="animate-spin inline h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+
+                            {{-- Loading Spinner --}}
+                            <div id="loadingProducts" class="hidden mb-3 flex items-center text-blue-600 text-sm">
+                                <svg class="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                 </svg>
-                                Loading products from API...
+                                Loading products from Platzi API...
+                            </div>
+
+                            <select id="apiProductSelect" 
+                                    class="shadow border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+                                <option value="">-- Select a product or enter manually --</option>
+                            </select>
+
+                            {{-- Mensajes de estado --}}
+                            <div id="errorMessage" class="hidden mt-2 text-red-600 text-sm">
+                                ❌ <span id="errorText"></span>
+                            </div>
+
+                            <div id="successMessage" class="hidden mt-2 text-green-600 text-sm">
+                                ✅ <span id="successText"></span>
                             </div>
                         </div>
 
-                        {{-- PASO 3: DATOS DEL PRODUCTO --}}
+                        {{-- PASO 3: DETALLES DEL PRODUCTO --}}
                         <div class="mb-6 p-4 bg-purple-50 border-l-4 border-purple-500">
                             <p class="font-semibold text-purple-800">✏️ Step 3: Product details</p>
-                            <p class="text-sm text-purple-700 mt-1">Edit any field - your values have priority!</p>
+                            <p class="text-sm text-purple-700 mt-1">You can edit any field - your values have priority!</p>
                         </div>
-
-                        <input type="hidden" name="api_image_url" id="apiImageUrl">
 
                         <div class="mb-6">
                             <label class="block text-gray-700 text-sm font-bold mb-2">Product Name *</label>
@@ -131,7 +156,7 @@
                                    id="imageInput"
                                    accept="image/*" 
                                    class="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:shadow-outline @error('image') border-red-500 @enderror"
-                                   onchange="previewImage(event)">
+                                   onchange="previewLocalImage(event)">
                             <p class="text-gray-600 text-xs mt-1">
                                 Upload your own image (overrides API image) - JPEG, PNG, GIF, max 2MB
                             </p>
@@ -139,17 +164,20 @@
                                 <p class="text-red-500 text-xs italic mt-1">{{ $message }}</p>
                             @enderror
                             
+                            {{-- Preview de imagen --}}
                             <div id="imagePreview" class="mt-3 hidden">
                                 <p class="text-sm font-semibold text-gray-700 mb-2">Image Preview:</p>
-                                <img id="preview" class="rounded-lg shadow-md max-h-64">
+                                <img id="preview" class="rounded-lg shadow-md max-h-64 object-contain border border-gray-200">
                             </div>
                         </div>
 
                         <div class="flex items-center justify-between">
-                            <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg focus:outline-none focus:shadow-outline transition">
+                            <button type="submit" 
+                                    class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg focus:outline-none focus:shadow-outline transition">
                                 Create Product
                             </button>
-                            <a href="{{ route('products.index') }}" class="text-gray-600 hover:text-gray-800 font-semibold">
+                            <a href="{{ route('products.index') }}" 
+                               class="text-gray-600 hover:text-gray-800 font-semibold">
                                 Cancel
                             </a>
                         </div>
@@ -164,59 +192,110 @@
         const apiProductsSection = document.getElementById('apiProductsSection');
         const apiProductSelect = document.getElementById('apiProductSelect');
         const loadingProducts = document.getElementById('loadingProducts');
+        const errorMessage = document.getElementById('errorMessage');
+        const errorText = document.getElementById('errorText');
+        const successMessage = document.getElementById('successMessage');
+        const successText = document.getElementById('successText');
 
         let apiProductsData = [];
+
+        // Función para limpiar URLs problemáticas de Platzi
+        function cleanImageUrl(url) {
+            if (!url) return 'https://placehold.co/400x400';
+            
+            // Eliminar corchetes y comillas que a veces vienen en las URLs
+            url = url.replace(/[\[\]"']/g, '');
+            
+            // Si la URL no es válida, usar placeholder
+            try {
+                new URL(url);
+                return url;
+            } catch {
+                return 'https://placehold.co/400x400';
+            }
+        }
 
         // Cuando cambia la categoría, cargar productos de la API
         styleSelect.addEventListener('change', async function() {
             const styleId = this.value;
             
+            // Resetear todo
+            apiProductsSection.classList.add('hidden');
+            loadingProducts.classList.add('hidden');
+            errorMessage.classList.add('hidden');
+            successMessage.classList.add('hidden');
+            apiProductsData = [];
+            apiProductSelect.innerHTML = '<option value="">-- Select a product or enter manually --</option>';
+            
             if (!styleId) {
-                apiProductsSection.classList.add('hidden');
                 return;
             }
 
             // Mostrar sección y loading
             apiProductsSection.classList.remove('hidden');
             loadingProducts.classList.remove('hidden');
-            apiProductSelect.innerHTML = '<option value="">-- Loading products... --</option>';
 
             try {
-                const response = await fetch(`{{ route('products.getApiProducts') }}?style_id=${styleId}`, {
+                const url = `{{ route('products.getApiProducts') }}?style_id=${styleId}`;
+                console.log('🔍 Fetching from:', url);
+
+                const response = await fetch(url, {
                     method: 'GET',
                     headers: {
                         'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json'
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     }
                 });
 
+                console.log('📊 Response status:', response.status);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
                 const result = await response.json();
+                console.log('📦 API Response:', result);
+
                 loadingProducts.classList.add('hidden');
 
-                if (result.success && result.products.length > 0) {
+                if (result.success && result.products && result.products.length > 0) {
                     apiProductsData = result.products;
                     
                     // Llenar el select con los productos
-                    apiProductSelect.innerHTML = '<option value="">-- Select a product from API or enter manually --</option>';
+                    apiProductSelect.innerHTML = '<option value="">-- Select a product or enter manually --</option>';
                     
                     result.products.forEach((product, index) => {
                         const option = document.createElement('option');
                         option.value = index;
-                        option.textContent = `${product.title} - $${product.price}`;
+                        option.textContent = `${product.title.substring(0, 50)}... - $${product.price} (${product.category})`;
                         apiProductSelect.appendChild(option);
                     });
+
+                    // Mostrar mensaje de éxito
+                    successMessage.classList.remove('hidden');
+                    successText.textContent = `${result.products.length} products loaded from Platzi API`;
+                    
+                    setTimeout(() => {
+                        successMessage.classList.add('hidden');
+                    }, 3000);
+
                 } else {
-                    apiProductSelect.innerHTML = '<option value="">-- No API products available for this category --</option>';
-                    apiProductsData = [];
+                    apiProductSelect.innerHTML = '<option value="">-- No products found for this category --</option>';
+                    errorMessage.classList.remove('hidden');
+                    errorText.textContent = result.message || 'No products available';
                 }
+
             } catch (error) {
+                console.error('❌ Error loading products:', error);
                 loadingProducts.classList.add('hidden');
+                errorMessage.classList.remove('hidden');
+                errorText.textContent = `Error: ${error.message}`;
                 apiProductSelect.innerHTML = '<option value="">-- Error loading products --</option>';
-                console.error('Error:', error);
             }
         });
 
-        // Cuando selecciona un producto de la API, autocompletar
+        // Cuando selecciona un producto de la API
         apiProductSelect.addEventListener('change', function() {
             const selectedIndex = this.value;
             
@@ -225,17 +304,19 @@
             }
 
             const product = apiProductsData[selectedIndex];
+            console.log('✅ Selected product:', product);
             
             // Autocompletar campos
             document.getElementById('productName').value = product.title;
             document.getElementById('productPrice').value = product.price;
             document.getElementById('productDescription').value = product.description;
-            document.getElementById('apiImageUrl').value = product.image;
+            
+            // Limpiar y guardar la URL de la imagen
+            const cleanedImageUrl = cleanImageUrl(product.image);
+            document.getElementById('apiImageUrl').value = cleanedImageUrl;
             
             // Mostrar preview de la imagen
-            if (product.image) {
-                showApiImagePreview(product.image);
-            }
+            showApiImagePreview(cleanedImageUrl);
         });
 
         function showApiImagePreview(imageUrl) {
@@ -243,10 +324,15 @@
             const previewDiv = document.getElementById('imagePreview');
             
             preview.src = imageUrl;
+            preview.onerror = function() {
+                // Si la imagen falla al cargar, usar placeholder
+                this.src = 'https://placehold.co/400x400?text=Image+Not+Available';
+            };
+            
             previewDiv.classList.remove('hidden');
         }
 
-        function previewImage(event) {
+        function previewLocalImage(event) {
             const preview = document.getElementById('preview');
             const previewDiv = document.getElementById('imagePreview');
             const file = event.target.files[0];

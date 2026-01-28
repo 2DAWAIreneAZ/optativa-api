@@ -77,6 +77,26 @@
                                    class="flex-1 bg-gray-200 hover:bg-gray-300 text-center py-2 rounded font-semibold">
                                     View Details
                                 </a>
+
+																@can('update', $product)
+																		<a href="{{ route('products.edit', $product) }}"
+																			class="flex-1 bg-yellow-500 text-center py-2 rounded font-semibold" style="background-color: yellow">
+																				Edit
+																		</a>
+																@endcan
+
+																@can('delete', $product)
+																		<form action="{{ route('products.destroy', $product) }}" method="POST" class="flex-1"
+																					onsubmit="return confirm('Delete this product?')">
+																				@csrf
+																				@method('DELETE')
+																				<button type="submit"
+																								class="w-full bg-red-500 py-2 rounded font-semibold" style="background-color: red">
+																						Delete
+																				</button>
+																		</form>
+																@endcan
+
                                 @if(!Auth::user()->isAdmin())
                                     <form action="{{ route('products.buy', $product) }}" method="POST" class="flex-1">
                                         @csrf

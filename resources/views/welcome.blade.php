@@ -35,7 +35,7 @@
                 <h2 class="text-5xl font-bold text-gray-800 mb-4">Welcome to Product Store</h2>
                 <p class="text-xl text-gray-600 mb-8">Discover amazing products at great prices</p>
                 @auth
-                    <a href="{{ route('shop.index') }}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg text-lg">
+                    <a href="{{ route('dashboard') }}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-lg text-lg">
                         Shop Now
                     </a>
                 @else
@@ -70,7 +70,7 @@
                                 <h4 class="text-xl font-bold mb-2">Manage Products</h4>
                                 <p class="text-gray-700">Add, edit, or delete products from the store</p>
                             </a>
-                            <a href="{{ route('shop.index') }}" 
+                            <a href="{{ route('dashboard') }}" 
                                class="block p-6 bg-green-100 rounded-lg hover:bg-green-200 transition">
                                 <h4 class="text-xl font-bold mb-2">View Store</h4>
                                 <p class="text-gray-700">Browse products as a customer</p>
@@ -78,7 +78,7 @@
                         </div>
                     @else
                         <div class="grid md:grid-cols-1 gap-6">
-                            <a href="{{ route('shop.index') }}" 
+                            <a href="{{ route('dashboard') }}" 
                                class="block p-6 bg-green-100 rounded-lg hover:bg-green-200 transition">
                                 <h4 class="text-xl font-bold mb-2">Shop Now</h4>
                                 <p class="text-gray-700">Browse and purchase amazing products</p>
