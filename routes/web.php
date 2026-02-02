@@ -18,7 +18,6 @@ Route::get('/dashboard', function () {
 
 // Todas las rutas que requieren autenticación
 Route::middleware('auth')->group(function () {
-
     // Perfil
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::get('/my-profile', [ProfileController::class, 'show'])->name('profile.show');
@@ -33,13 +32,12 @@ Route::middleware('auth')->group(function () {
 				Route::get('/products/api/by-category', [ProductController::class, 'getApiProductsByCategory'])->name('products.getApiProducts');
 		});
 
-				
-				// Acciones adicionales de productos
-				Route::post('/products/{product}/buy', [ProductController::class, 'buy'])->name('products.buy');
-				Route::post('/products/{product}/valoration', [ProductController::class, 'addValoration'])->name('products.valoration');
-				
-				// Productos (Resource)
-				Route::resource('products', ProductController::class);
+		// Acciones adicionales de productos
+		Route::post('/products/{product}/buy', [ProductController::class, 'buy'])->name('products.buy');
+		Route::post('/products/{product}/valoration', [ProductController::class, 'addValoration'])->name('products.valoration');
+		
+		// Productos (Resource)
+		Route::resource('products', ProductController::class);
 
     // Estilos
     Route::resource('styles', StyleController::class)->except(['show']);

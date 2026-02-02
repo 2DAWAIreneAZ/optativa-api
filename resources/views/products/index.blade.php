@@ -75,7 +75,7 @@
                             <div class="flex gap-2">
                                 <a href="{{ route('products.show', $product) }}" 
                                    class="flex-1 bg-gray-200 hover:bg-gray-300 text-center py-2 rounded font-semibold">
-                                    View Details
+                                    Details
                                 </a>
 
 																@can('update', $product)

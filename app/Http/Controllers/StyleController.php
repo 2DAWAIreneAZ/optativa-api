@@ -5,21 +5,17 @@ namespace App\Http\Controllers;
 use App\Models\Style;
 use Illuminate\Http\Request;
 
-class StyleController extends Controller
-{
-    public function __construct()
-    {
+class StyleController extends Controller {
+    public function __construct() {
         $this->middleware('auth');
     }
 
-    public function index()
-    {
+    public function index() {
         $styles = Style::withCount('products')->get();
-        return view('styles.index', compact('styles'));
+        return view('styles.index', ['styles' => $styles]);
     }
 
-    public function create()
-    {
+    public function create() {
         $this->authorize('create', Style::class);
         return view('styles.create');
     }
@@ -42,7 +38,7 @@ class StyleController extends Controller
     public function edit(Style $style)
     {
         $this->authorize('update', $style);
-        return view('styles.edit', compact('style'));
+        return view('styles.edit', ['style' => $style]);
     }
 
     public function update(Request $request, Style $style)

@@ -72,6 +72,6 @@ class ProfileController extends Controller {
             ->latest()
             ->get();
         
-        return view('profile.show', compact('user', 'purchases', 'productsForSale', 'valorations'));
+        return view('profile.show', ['user' => $user, 'purchases' => $purchases, 'productsForSale' => $productsForSale, 'valorations' => $valorations]);
     }
 }

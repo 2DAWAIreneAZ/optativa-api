@@ -10,8 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Http;
 
-class ProductController extends Controller
-{
+class ProductController extends Controller {
     public function index(Request $request) {
         $query = Product::with('style', 'valorations');
 

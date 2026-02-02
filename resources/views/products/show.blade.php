@@ -62,7 +62,7 @@
                                         <button type="submit" 
                                                 class="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg text-lg transition"
                                                 {{ $product->stock <= 0 ? 'disabled' : '' }}>
-                                            {{ $product->stock > 0 ? '🛒 Buy Now' : 'Out of Stock' }}
+                                            {{ $product->stock > 0 ? 'Buy Now' : 'Out of Stock' }}
                                         </button>
                                     </form>
                                 @endif
@@ -70,14 +70,14 @@
                                 @if(Auth::user()->isAdmin())
                                     <div class="flex gap-2">
                                         <a href="{{ route('products.edit', $product) }}" 
-                                           class="flex-1 bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-3 px-6 rounded-lg text-center">
+                                           class="flex-1 bg-yellow-500 font-bold py-3 px-6 rounded-lg text-center" style="background-color:yellow">
                                             Edit Product
                                         </a>
                                         <form action="{{ route('products.destroy', $product) }}" method="POST" class="flex-1">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" 
-                                                    class="w-full bg-red-500 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-lg"
+                                                    class="w-full bg-red-500 font-bold py-3 px-6 rounded-lg" style="background-color:red"
                                                     onclick="return confirm('Are you sure you want to delete this product?')">
                                                 Delete
                                             </button>
@@ -99,12 +99,12 @@
                                         <option value="5">★★★★★ Excellent (5)</option>
                                         <option value="4">★★★★☆ Very Good (4)</option>
                                         <option value="3">★★★☆☆ Good (3)</option>
-                                        <option value="2">★★☆☆☆ Fair (2)</option>
+                                        <option value="2">★★☆☆☆ Meh (2)</option>
                                         <option value="1">★☆☆☆☆ Poor (1)</option>
                                     </select>
                                 </div>
                                 <div class="mb-4">
-                                    <label class="block text-gray-700 text-sm font-bold mb-2">Comment (Optional)</label>
+                                    <label class="block text-gray-700 text-sm font-bold mb-2">Comment</label>
                                     <textarea name="comment" rows="3" 
                                               class="shadow border rounded w-full py-2 px-3 text-gray-700"
                                               placeholder="Share your experience with this product..."></textarea>

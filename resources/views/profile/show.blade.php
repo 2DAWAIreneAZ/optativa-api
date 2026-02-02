@@ -73,7 +73,6 @@
                             </div>
                             <div class="mt-4 text-gray-600">
                                 <p class="font-semibold">Total Purchases: {{ $purchases->count() }}</p>
-                                <p class="font-semibold">Total Spent: ${{ number_format($purchases->sum('price'), 2) }}</p>
                             </div>
                         @else
                             <div class="text-center py-8">
@@ -128,7 +127,6 @@
                             </div>
                             <div class="mt-4 text-gray-600">
                                 <p class="font-semibold">Total Products: {{ $productsForSale->count() }}</p>
-                                <p class="font-semibold">Total Inventory Value: ${{ number_format($productsForSale->sum(function($p) { return $p->price * $p->stock; }), 2) }}</p>
                             </div>
                         @else
                             <div class="text-center py-8">

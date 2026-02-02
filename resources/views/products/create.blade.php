@@ -23,12 +23,6 @@
                     <form action="{{ route('products.store') }}" method="POST" enctype="multipart/form-data" id="productForm">
                         @csrf
 
-                        {{-- PASO 1: SELECCIONAR CATEGORÍA --}}
-                        <div class="mb-6 p-4 bg-blue-50 border-l-4 border-blue-500">
-                            <p class="font-semibold text-blue-800">📦 Step 1: Select a category</p>
-                            <p class="text-sm text-blue-600 mt-1">Products from Platzi Fake Store API will load automatically</p>
-                        </div>
-
                         <input type="hidden" name="api_image_url" id="apiImageUrl">
 
                         <div class="mb-6">
@@ -51,11 +45,6 @@
 
                         {{-- PASO 2: PRODUCTOS DE LA API --}}
                         <div id="apiProductsSection" class="mb-6 hidden">
-                            <div class="mb-4 p-4 bg-green-50 border-l-4 border-green-500">
-                                <p class="font-semibold text-green-800">✅ Step 2: Choose a product from Platzi API (optional)</p>
-                                <p class="text-sm text-green-700 mt-1">Select to auto-fill, or enter data manually below</p>
-                            </div>
-
                             <label class="block text-gray-700 text-sm font-bold mb-2">
                                 Products from Platzi API
                                 <span class="text-xs font-normal text-gray-500">(Optional)</span>
@@ -77,18 +66,12 @@
 
                             {{-- Mensajes de estado --}}
                             <div id="errorMessage" class="hidden mt-2 text-red-600 text-sm">
-                                ❌ <span id="errorText"></span>
+                              <span id="errorText"></span>
                             </div>
 
                             <div id="successMessage" class="hidden mt-2 text-green-600 text-sm">
-                                ✅ <span id="successText"></span>
+                              <span id="successText"></span>
                             </div>
-                        </div>
-
-                        {{-- PASO 3: DETALLES DEL PRODUCTO --}}
-                        <div class="mb-6 p-4 bg-purple-50 border-l-4 border-purple-500">
-                            <p class="font-semibold text-purple-800">✏️ Step 3: Product details</p>
-                            <p class="text-sm text-purple-700 mt-1">You can edit any field - your values have priority!</p>
                         </div>
 
                         <div class="mb-6">
@@ -199,14 +182,12 @@
 
         let apiProductsData = [];
 
-        // Función para limpiar URLs problemáticas de Platzi
+        // Limpiar URLs problemática
         function cleanImageUrl(url) {
             if (!url) return 'https://placehold.co/400x400';
             
-            // Eliminar corchetes y comillas que a veces vienen en las URLs
             url = url.replace(/[\[\]"']/g, '');
             
-            // Si la URL no es válida, usar placeholder
             try {
                 new URL(url);
                 return url;
@@ -218,8 +199,8 @@
         // Cuando cambia la categoría, cargar productos de la API
         styleSelect.addEventListener('change', async function() {
             const styleId = this.value;
-            
-            // Resetear todo
+						
+            // Rastrea
             apiProductsSection.classList.add('hidden');
             loadingProducts.classList.add('hidden');
             errorMessage.classList.add('hidden');
@@ -237,7 +218,7 @@
 
             try {
                 const url = `{{ route('products.getApiProducts') }}?style_id=${styleId}`;
-                console.log('🔍 Fetching from:', url);
+                console.log('Fetching from:', url);
 
                 const response = await fetch(url, {
                     method: 'GET',
@@ -248,14 +229,14 @@
                     }
                 });
 
-                console.log('📊 Response status:', response.status);
+                console.log('Response status:', response.status);
 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
 
                 const result = await response.json();
-                console.log('📦 API Response:', result);
+                console.log('API Response:', result);
 
                 loadingProducts.classList.add('hidden');
 
@@ -287,7 +268,7 @@
                 }
 
             } catch (error) {
-                console.error('❌ Error loading products:', error);
+                console.error('Error loading products:', error);
                 loadingProducts.classList.add('hidden');
                 errorMessage.classList.remove('hidden');
                 errorText.textContent = `Error: ${error.message}`;
@@ -304,7 +285,7 @@
             }
 
             const product = apiProductsData[selectedIndex];
-            console.log('✅ Selected product:', product);
+            console.log('Selected product:', product);
             
             // Autocompletar campos
             document.getElementById('productName').value = product.title;
